@@ -1,8 +1,8 @@
 name: build & release
 on:
+  workflow_dispatch:
   push:
-    tags:
-      - "*"
+    branches: [ "main" ]
 
 env:
   flutter-version: "3.32.7"
