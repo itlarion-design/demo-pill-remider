@@ -53,6 +53,14 @@ jobs:
           key: build-cache-${{ hashFiles('**/*') }}
           restore-keys: build-cache-
 
+      - name: Debug keystore files
+        run: |
+          echo "Listing android/app/ directory:"
+          ls -l android/app/
+          echo "Contents of android/keystore.properties:"
+          cat android/keystore.properties
+        shell: bash
+        
       - run: |
           # build release apks
 
