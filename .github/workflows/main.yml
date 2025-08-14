@@ -11,6 +11,7 @@ env:
   BUILD_CACHE: |
     build
     .dart_tool
+  PUB_CACHE: ~/.pub-cache
 jobs:
   build-release:
     runs-on: ubuntu-22.04
