@@ -53,36 +53,41 @@ jobs:
           key: build-cache-${{ hashFiles('**/*') }}
           restore-keys: build-cache-
         
-      - run: |
-          # build release aab
-
-          ## environment setup
-
+      - name: Build AAB
+        run: |
+          # Lấy version từ pubspec.yaml
           app_ver=$(grep 'version:' pubspec.yaml)
           app_ver=$(echo "${app_ver/'version:'/}" | xargs)
           app_ver="${app_ver%%+*}"
           echo "v$app_ver"
           echo "app_ver=$app_ver" >> $GITHUB_ENV
 
-          mkdir artifacts && {
-            ARTIFACTS_PATH="$GITHUB_WORKSPACE/artifacts"
-            echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
-          }
+          # Đặt tên app
+          APP_NAME="${GITHUB_REPOSITORY##*/}"
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
 
+          # Tạo thư mục artifact
+          mkdir -p artifacts
+          ARTIFACTS_PATH="$GITHUB_WORKSPACE/artifacts"
+          echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
+
+          # Giải mã keystore
           echo "$JAVA_KEYSTORE" | base64 -d > android/app/upload-keystore.jks
           echo "$JAVA_KEYSTORE_PROPERTIES" | base64 -d > android/keystore.properties
 
-          ## build
-
+          # Build
           flutter pub get
-
           flutter build appbundle --release
+
+          # Đổi tên file aab đúng chuẩn
           mv build/app/outputs/bundle/release/app-release.aab "$ARTIFACTS_PATH/$APP_NAME-$app_ver.aab"
+
+          # Debug tên file
+          ls -l "$ARTIFACTS_PATH"
         shell: bash
         env:
           JAVA_KEYSTORE: ${{ secrets.JAVA_KEYSTORE }}
           JAVA_KEYSTORE_PROPERTIES: ${{ secrets.JAVA_KEYSTORE_PROPERTIES }}
-          APP_NAME: ${{ github.event.repository.name }}
 
       - name: Upload build artifacts to release
         if: startsWith(github.ref, 'refs/tags/')
@@ -97,7 +102,7 @@ jobs:
           name: v${{ env.app_ver }}
           path: ${{ env.ARTIFACTS_PATH }}/*.aab
 
-                # ----------- BƯỚC THÊM MỚI ĐỂ UPLOAD AAB LÊN GOOGLE PLAY -----------
+      # ----------- UPLOAD AAB LÊN GOOGLE PLAY -----------
       - name: Upload AAB to Google Play Internal Test
         uses: r0adkll/upload-google-play@v1
         with:
